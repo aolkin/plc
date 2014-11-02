@@ -1,0 +1,21 @@
+{
+    "universes": [
+	{
+	    "input": 0,
+	    "output": {
+		"192": 1,
+		"240": null
+	    },
+	    "dimmers": 240,
+	    "mode": "LTP",
+	    "interval": 100
+	}
+    ],
+    "logging": {
+	"errors": 2,
+	"warnings": 2,
+	"debug": 0,
+	"logging": 1
+    },
+    "daemon": false
+}
