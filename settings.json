@@ -14,8 +14,25 @@
     "logging": {
 	"errors": 2,
 	"warnings": 2,
-	"debug": 0,
-	"logging": 1
+	"debug": 2,
+	"logging": 1,
+	"folder": "."
     },
-    "daemon": false
+    "daemon": false,
+    "saving": {
+	"folder": ".",
+	"pickle_version": 4,
+	"autosave": null
+    },
+    "defaults": {
+	"cue": {
+	    
+	}
+    },
+    "server": {
+	"address": "",
+	"port": 7832,
+	"users": "passwd",
+	"pickle_version": 4
+    }
 }

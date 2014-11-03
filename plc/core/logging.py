@@ -1,5 +1,5 @@
 from .settings import conf
-import sys, time
+import sys, time, os
 import traceback as tb
 
 settings = conf["logging"]
@@ -9,9 +9,11 @@ class NullFD:
         pass
 
 if conf["daemon"]:
-    DESCRIPTORS = [NullFD(), sys.stdout, sys.stderr]
+    DESCRIPTORS = [NullFD(),
+                   open(os.path.join(settings.get("folder", "."), "output.log"), "a"),
+                   open(os.path.join(settings.get("folder", "."), "errors.log"), "a")]
 else:
-    DESCRIPTORS = [NullFD(), open("output.log", "a"), open("errors.log","a")]
+    DESCRIPTORS = [NullFD(), sys.stdout, sys.stderr]
 
 def _log(level, *args):
     print(time.strftime("[%m/%d/%y %H:%M:%S]"), *args, file=DESCRIPTORS[settings[level]])
