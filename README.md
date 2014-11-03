@@ -6,9 +6,9 @@ A Python lighting controller, with a curses-based frontend and using OLA for the
 Requirements
 ---------------------------------
 
-Python >= 3.4
-OLA with Python bindings (must be manually converted to Python 3)
-    - and python3-protobuf
+- Python >= 3.4
+- OLA with Python bindings (must be manually converted to Python 3)
+  + and python3-protobuf
 
-#### Python Packages:
-     - passlib
+##### Python Packages
+  - passlib
