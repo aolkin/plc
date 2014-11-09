@@ -5,19 +5,19 @@ from .persistence import *
 from .data import *
 
 from ..network.protocols import ServerProtocol
+from ..network.messages import *
 
 import asyncio, os
 
 class Controller:
     def __init__(self,settings=conf):
         self.settings = settings
-        self.universes = []
-        for i in settings["universes"]:
-            self.universes.append(Universe(
-                i["output"], i["dimmers"], i["interval"],
-                INTEGRATION_MODES[i["mode"]], i["input"],
-                self, i.get("allow_ignore_dmx",False)))
-
+        i = settings["universe"]
+        self.universe = Universe(
+            i["output"], i["dimmers"], i["interval"],
+            INTEGRATION_MODES[i["mode"]], i["input"],
+            self, i.get("allow_ignore_dmx",False))
+        
         self.saver = PersistentData(settings["saving"]["autosave"])
         if not self.saver.loaded:
             self.saver.groups = Registry(Group)
@@ -47,3 +47,13 @@ class Controller:
                 self.server.close()
                 self.loop.run_until_complete(self.server.wait_closed())
                 self.loop.close()
+    
+    def do_update(t, obj):
+        if t == "dimmers":
+            dimmers = obj
+        else:
+            dimmers = obj.get_dimmers()
+        self.universe.set_dimmers(dimmers)
+        for i in self.clients:
+            i.send_message(DimmerMessage(dimmers))
+        self.saver.save()

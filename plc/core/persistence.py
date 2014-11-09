@@ -9,7 +9,7 @@ def _get_fn(fn):
 class PersistentData:
     def __init__(self, fn):
         self.__fn = fn
-        if fn and os.path.exists(_get_fn):
+        if fn and os.path.exists(_get_fn(fn)):
             fd = open(_get_fn(fn), "rb")
             obj = pickle.load(fd)
             fd.close()

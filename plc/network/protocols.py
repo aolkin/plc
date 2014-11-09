@@ -66,6 +66,10 @@ class ServerProtocol(PLCProtocol):
         if exc:
             warn(repr(exc))
 
+    def on_message(self,obj):
+        debug("Received:", obj)
+        obj.server_action(self)
+
 class ClientProtocol(PLCProtocol):
     def __init__(self, user, pw):
         super().__init__()
@@ -76,3 +80,7 @@ class ClientProtocol(PLCProtocol):
         super().connection_made(transport)
         debug("Connected to {}".format(transport.get_extra_info("peername")))
         self.send_message(AuthMessage(self.username, self.pw))
+
+    def on_message(self,obj):
+        debug("Received:", obj)
+        obj.client_action(self)

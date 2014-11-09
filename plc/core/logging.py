@@ -4,16 +4,12 @@ import traceback as tb
 
 settings = conf["logging"]
 
-class NullFD:
-    def write(*args,**kwargs):
-        pass
-
 if conf["daemon"]:
-    DESCRIPTORS = [NullFD(),
+    DESCRIPTORS = [open(os.devnull, "w"),
                    open(os.path.join(settings.get("folder", "."), "output.log"), "a"),
                    open(os.path.join(settings.get("folder", "."), "errors.log"), "a")]
 else:
-    DESCRIPTORS = [NullFD(), sys.stdout, sys.stderr]
+    DESCRIPTORS = [open(os.devnull, "w"), sys.stdout, sys.stderr]
 
 def _log(level, *args):
     print(time.strftime("[%m/%d/%y %H:%M:%S]"), *args, file=DESCRIPTORS[settings[level]])

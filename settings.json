@@ -1,16 +1,14 @@
 {
-    "universes": [
-	{
-	    "input": 0,
-	    "output": {
-		"192": 1,
-		"240": null
-	    },
-	    "dimmers": 240,
-	    "mode": "LTP",
-	    "interval": 100
-	}
-    ],
+    "universe": {
+	"input": 0,
+	"output": {
+	    "192": 1,
+	    "240": null
+	},
+	"dimmers": 240,
+	"mode": "LTP",
+	"interval": 100
+    },
     "logging": {
 	"errors": 2,
 	"warnings": 2,
@@ -22,7 +20,7 @@
     "saving": {
 	"folder": ".",
 	"pickle_version": 4,
-	"autosave": null
+	"autosave": "autosave.dat"
     },
     "defaults": {
 	"cue": {
