@@ -1,0 +1,18 @@
+{
+    "server": {
+	"address": "localhost",
+	"port": 7832,
+	"pickle_version": 4
+    },
+    "user": "lightingcrew",
+    "password": "",
+
+    "logging": {
+	"errors": 2,
+	"warnings": 2,
+	"debug": 2,
+	"logging": 1,
+	"folder": ".",
+	"client": true
+    }
+}

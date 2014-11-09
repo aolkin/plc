@@ -4,7 +4,7 @@ import traceback as tb
 
 settings = conf["logging"]
 
-if conf["daemon"]:
+if conf.get("daemon") or settings.get("client"):
     DESCRIPTORS = [open(os.devnull, "w"),
                    open(os.path.join(settings.get("folder", "."), "output.log"), "a"),
                    open(os.path.join(settings.get("folder", "."), "errors.log"), "a")]

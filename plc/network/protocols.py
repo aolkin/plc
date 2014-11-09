@@ -71,10 +71,11 @@ class ServerProtocol(PLCProtocol):
         obj.server_action(self)
 
 class ClientProtocol(PLCProtocol):
-    def __init__(self, user, pw):
+    def __init__(self, user, pw, client):
         super().__init__()
         self.username = user
         self.pw = hashpw(pw)
+        self.client = client
 
     def connection_made(self, transport):
         super().connection_made(transport)
