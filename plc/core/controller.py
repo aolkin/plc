@@ -33,9 +33,16 @@ class Controller:
 
     def register_client(self, p):
         self.clients.append(p)
+        p.send_message(DimmerMessage(dict(zip(range(len(self.universe.dimmers)),
+                                              self.universe.dimmers))))
 
     def unregister_client(self, p):
         self.clients.remove(p)
+
+    def on_dmx(self, universe, changed, data, ignore_input):
+        if len(changed):
+            for i in self.clients:
+                i.send_message(DimmerMessage(changed, "input"))
 
     def launch(self):
         if (not conf.get("daemon",False)) or os.fork() == 0:
@@ -48,7 +55,7 @@ class Controller:
                 self.loop.run_until_complete(self.server.wait_closed())
                 self.loop.close()
     
-    def do_update(t, obj):
+    def do_update(self, t, obj):
         if t == "dimmers":
             dimmers = obj
         else:

@@ -16,3 +16,7 @@ class MissingDefaultError(PLCException):
 class SecurityError(PLCException): pass
 
 class NetworkError(PLCException): pass
+
+class ScreenException(PLCException): pass
+
+class PadSizeError(ScreenException): pass

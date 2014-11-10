@@ -74,7 +74,7 @@ class ClientProtocol(PLCProtocol):
     def __init__(self, user, pw, client):
         super().__init__()
         self.username = user
-        self.pw = hashpw(pw)
+        self.pw = pw
         self.client = client
 
     def connection_made(self, transport):

@@ -14,7 +14,6 @@ class Message:
         return len(self._list)
 
     def action(self, protocol):
-        """This function should be implemented by subclasses."""
         debug("Message received.")
 
     def server_action(self, protocol):
@@ -24,7 +23,8 @@ class Message:
         self.action(protocol)
 
 class ResultMessage(Message):
-    pass
+    def action(self, protocol):
+        debug("Result:", self._list)
 
 ### Server messages
 
@@ -40,6 +40,9 @@ class AuthMessage(Message):
 class DimmerMessage(Message):
     def server_action(self, protocol):
         protocol.controller.do_update("dimmers", self[0])
+
+    def client_action(self, protocol):
+        protocol.client.pads.dimmers.set_dimmers(self[0], self[1] if len(self) > 1 else None)
 
 class RequestMessage(Message):
     def server_action(self, protocol):

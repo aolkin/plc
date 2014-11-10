@@ -25,6 +25,6 @@ class Client:
         
         self.loop.call_soon(self.screen.update)
         try:
-            self.screen.wrapper(self.loop.run_forever)
+            self.screen.wrapper(self.loop.run_forever, self.protocol)
         except BaseException as err:
             print_exc()
