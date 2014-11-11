@@ -12,7 +12,9 @@ else:
     DESCRIPTORS = [open(os.devnull, "w"), sys.stdout, sys.stderr]
 
 def _log(level, *args):
-    print(time.strftime("[%m/%d/%y %H:%M:%S]"), *args, file=DESCRIPTORS[settings[level]])
+    fd = DESCRIPTORS[settings[level]]
+    print(time.strftime("[%m/%d/%y %H:%M:%S]"), *args, file=fd)
+    fd.flush()
 
 def log(*args):
     _log("logging", *args)

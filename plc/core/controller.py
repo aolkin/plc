@@ -35,6 +35,8 @@ class Controller:
         self.clients.append(p)
         p.send_message(DimmerMessage(dict(zip(range(len(self.universe.dimmers)),
                                               self.universe.dimmers))))
+        p.send_message(RegistryMessage("groups", self.groups))
+        p.send_message(RegistryMessage("cues", self.cues))
 
     def unregister_client(self, p):
         self.clients.remove(p)

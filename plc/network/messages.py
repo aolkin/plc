@@ -68,6 +68,21 @@ class GroupMessage(Message):
         for i in protocol.controller.clients:
             i.send_message(self)
 
+    def client_action(self, protocol):
+        if self[0] == "update":
+            group = protocol.client.pads.list.groups[self[1].id] = self[1]
+            group._groups = protocol.client.pads.list.groups
+        else:
+            group = protocol.client.pads.list.groups[self[1]]
+        if self[0] == "level" or (self[0] == "update" and len(self) > 2):
+            group.level = self[2]
+        protocol.client.pads.list.refresh("groups")
+
 class CueMessage(GroupMessage):
     def server_action(self, protocol):
         super().server_action(protocol)
+
+class RegistryMessage(Message):
+    def client_action(self, protocol):
+        setattr(protocol.client.pads.list, self[0], self[1])
+        protocol.client.pads.list.refresh(self[0])

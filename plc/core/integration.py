@@ -77,7 +77,7 @@ class Universe:
                 if not self.__ignore_input:
                     self.dimmers[i] = d
         self.last_input = data
-        if len(changed): debug("Changed inputs:", changed)
+        # if len(changed): debug("Changed inputs:", changed)
         if self.controller and hasattr(self.controller, "on_dmx"):
             self.controller.on_dmx(self, changed, data, self.__ignore_input)
 

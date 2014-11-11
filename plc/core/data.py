@@ -39,6 +39,7 @@ class DimmerGroup:
         self.channels = {}
         self.nested = {}
         self.level = 0
+        self.name = ""
         self._groups = group_registry
 
     def get_dimmers(self):

@@ -82,6 +82,9 @@ class ClientProtocol(PLCProtocol):
         debug("Connected to {}".format(transport.get_extra_info("peername")))
         self.send_message(AuthMessage(self.username, self.pw))
 
+    def connection_lost(self, exc):
+        self.client.fatal("Lost Connection!")
+
     def on_message(self,obj):
         debug("Received:", obj)
         obj.client_action(self)
