@@ -3,14 +3,13 @@ from curses import *
 from ..core.errors import *
 from ..core.logging import *
 from ..core.data import *
+from ..core.settings import conf
 
 import time, sys, os
 
 MAX_ENTITIES = 999
 
 DIMMER_MAX = 255
-
-COLS = 160
 
 def percent(l):
     return int(l / DIMMER_MAX * 100)
@@ -23,15 +22,21 @@ class _ObjectDict(dict):
         self[k] = v
 
 class Pad:
-    def __init__(self, x, y, lines, cols):
-        self.x = int(x)
-        self.y = int(y)
-        if (int(lines) != lines) or (int(cols) != cols):
-            raise PadSizeError("Dimensions must be whole numbers.")
-        self.rows = int(lines)
-        self.cols = int(cols)
+    def __init__(self, xfrac, yfrac, linefrac, colfrac):
+        self.xfrac = xfrac
+        self.yfrac = yfrac
+        self.linefrac = linefrac
+        self.colfrac = colfrac
         self.enabled = True
+
+    def resize(self, w, h):
+        self.x = int(self.xfrac * w)
+        self.y = int(self.yfrac * h)
+        self.rows = int(self.linefrac * h)
+        self.cols = int(self.colfrac * w)
         self.pad = newpad(self.rows, self.cols)
+        if hasattr(self, "post_resize"):
+            self.post_resize(w, h)
 
     def move(self, x, y, add=False):
         self.x = int(self.x + x if add else x)
@@ -50,21 +55,27 @@ class Pad:
 class StatusPad(Pad):
     def __init__(self, screen):
         self.screen = screen
-        super().__init__(0, 0, 4, COLS)
+        super().__init__(0, 0, 0.0625, 1)
         self.screen.loop.call_soon(self.timed_update)
+
+    def post_resize(self, w, h):
         self.pad.addstr(0, 0, " Python Lighting Controls ", A_REVERSE)
 
     def timed_update(self):
         self.screen.loop.call_later(1, self.timed_update)
-        self.pad.addstr(0, 150, time.strftime(" %I:%M %p "), A_REVERSE) # width: 10
+        self.pad.addstr(0, self.cols-10, time.strftime(" %I:%M %p "), A_REVERSE) # width: 10
 
 class DimmerPad(Pad):
-    def __init__(self, n):
-        cols = COLS
-        self.dcols = cols / 4
-        super().__init__(0, 4, n / self.dcols * 3, cols)
+    def __init__(self, scr, n):
         self.dimmers = [0 for i in range(n)]
-        for i in range(n):
+        super().__init__(0, 0.0625, 0.5, 1)
+
+    def resize(self, w, h):
+        super().resize(w // 4 * 4, h)
+
+    def post_resize(self, w, h):
+        self.dcols = int(w / 4)
+        for i in range(len(self.dimmers)):
             self.pad.addstr("{:0>3} ".format(i + 1))
             if (i + 1) % self.dcols == 0:
                 y, x = self.pad.getyx()
@@ -86,11 +97,13 @@ class DimmerPad(Pad):
             except KeyError:
                 pass
 
-HALF_WIDTH = COLS / 2
+HALF_WIDTH = 0.5
 
 class BoxedPad(Pad):
     def __init__(self, *args):
         super().__init__(*args)
+
+    def post_resize(self, w, h):
         self.pad.border()
 
     def addstr(self, x, y, *args):
@@ -99,18 +112,26 @@ class BoxedPad(Pad):
 class ListPad(BoxedPad):
     def __init__(self, screen):
         self.screen = screen
-        super().__init__(HALF_WIDTH, 28, 36, HALF_WIDTH)
-        self.grouppad = newpad(MAX_ENTITIES * 2, 76)
+        super().__init__(0.5, 0.4375, 0.5625, 0.5)
+
+    def post_resize(self, w, h):
+        super().post_resize(w, h)
+        self.grouppad = newpad(MAX_ENTITIES * 2, self.cols - 4)
+        self.mode()
+        if hasattr(self, "groups"):
+            self.refresh(self.screen.mode+"s")
 
     def mode(self):
         self.currentrow = 0
         if self.screen.mode == "group":
             self.addstr(0, int(self.cols / 2 - 3), "Groups", A_BOLD)
-            self.addstr(1, 1, "  # Name" + "    "*16 + "   @", A_REVERSE)
+            self.addstr(1, 1, "  # Name" + " "*(self.cols - 13) + "@", A_REVERSE)
         elif self.screen.mode == "cue":
             pass
 
     def post_update(self):
+        if not hasattr(self, "rows"):
+            return False
         getattr(self, self.screen.mode+"pad").noutrefresh(
             self.currentrow, 0, *self.shift(4, 2, self.rows - 4, self.cols - 2))
 
@@ -118,18 +139,19 @@ class ListPad(BoxedPad):
         if t == "groups":
             self.grouppad.clear()
             for i, j in sorted(self.groups.items()):
-                self.grouppad.addstr("{:>3} {:<68} {:>3}\n".format(i, getattr(j, "name", ""),
-                                                                   percent(j.level)))
+                row = "{:>3} {}{{}}{:>3}\n".format(i, getattr(j, "name", ""),
+                                                   percent(j.level))
+                self.grouppad.addstr(row.format( " " * (self.cols - len(row) - 1) ))
 
 class SelectedPad(BoxedPad):
     def __init__(self, screen):
         self.screen = screen
-        super().__init__(0, 28, 16, HALF_WIDTH)
+        super().__init__(0, 0.4375, 0.25, 0.5)
 
 class RunningPad(BoxedPad):
     def __init__(self, screen):
         self.screen = screen
-        super().__init__(0, 44, 20, HALF_WIDTH)
+        super().__init__(0, 0.6875, 0.3125, 0.5)
 
 class Screen:
     def __init__(self, loop):
@@ -146,10 +168,19 @@ class Screen:
         if c == ord("q"):
             self.loop.stop()
             return False
+        elif c == KEY_RESIZE:
+            self.resize()
         for i in self.pads.values():
             i.update()
         self.scr.refresh()
         self.loop.call_later(0.05, self.update)
+
+    def resize(self):
+        self.height, self.width = self.scr.getmaxyx()
+        for i in self.pads.values():
+            i.resize(self.width, self.height)
+            i.update()
+        self.scr.refresh()
 
     def wrapper(self, func, protocol):
         self.func = func
@@ -158,11 +189,10 @@ class Screen:
 
     def create_pads(self):
         self.pads.status = StatusPad(self)
-        self.pads.dimmers = DimmerPad(320)
+        self.pads.dimmers = DimmerPad(self, conf["dimmers"])
         self.pads.selected = SelectedPad(self)
         self.pads.running = RunningPad(self)
         self.pads.list = ListPad(self)
-        self.pads.list.mode()
 
     def wrapped(self, stdscr):
         self.scr = stdscr
@@ -170,5 +200,6 @@ class Screen:
         self.original_cursor = curs_set(0)
 
         self.create_pads()
+        self.resize()
         self.func()
         curs_set(self.original_cursor)

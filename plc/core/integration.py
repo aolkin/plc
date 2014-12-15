@@ -22,6 +22,9 @@ class _OlaThread(Thread):
         self.universes = []
 
     def run(self):
+        if conf["dummy"]:
+            log("Dummy mode, not starting OLA Wrapper.")
+            return False
         self.wrapper = ClientWrapper()
         self.client = self.wrapper.Client()
         for i in self.universes:
@@ -69,13 +72,11 @@ class Universe:
     def _received_dmx(self, data):
         changed = {}
         for i, d in enumerate(data[:len(self.dimmers)]):
-            if d != self.last_input[i]:
+            if ((i >= len(self.last_input)) or (d != self.last_input[i])
+                or (i in self.override)):
                 if not self.__ignore_input:
                     self.dimmers[i] = d
                 changed[i] = d
-            elif i in self.override:
-                if not self.__ignore_input:
-                    self.dimmers[i] = d
         self.last_input = data
         # if len(changed): debug("Changed inputs:", changed)
         if self.controller and hasattr(self.controller, "on_dmx"):
@@ -92,7 +93,7 @@ class Universe:
         
     def _sent_dmx(self, ola, status):
         if not status.Succeeded():
-            error("Failed to send DMX on OLA Universe {}".format(ola))
+            error("Failed to send DMX on OLA Universe {}: {}".format(ola, status.message.decode()))
 
     def set_dimmers(self,values):
         with ola_lock:

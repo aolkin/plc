@@ -17,6 +17,7 @@
 	"folder": "."
     },
     "daemon": false,
+    "dummy": true,
     "saving": {
 	"folder": ".",
 	"pickle_version": 4,
