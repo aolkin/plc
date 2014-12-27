@@ -12,3 +12,10 @@ Requirements
 
 ##### Python Packages
   - passlib
+
+
+Curses Client Keybindings
+---------------------------------
+
+q - quit
+m - switch list

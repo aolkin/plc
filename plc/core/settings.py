@@ -15,7 +15,9 @@ class Configuration(dict):
         fd.close()
 
 conf = Configuration()
-if os.path.exists(default_fn):
+if os.environ.get("PLC_SETTINGS"):
+    conf.load(os.environ.get("PLC_SETTINGS"))
+elif os.path.exists(default_fn):
     conf.load()
 else:
     print("Warning: configuration not found!", file=sys.stderr)

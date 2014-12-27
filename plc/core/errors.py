@@ -20,3 +20,5 @@ class NetworkError(PLCException): pass
 class ScreenException(PLCException): pass
 
 class PadSizeError(ScreenException): pass
+
+class ActionNotImplemented(NotImplementedError): pass

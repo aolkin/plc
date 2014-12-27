@@ -52,6 +52,7 @@ class ServerProtocol(PLCProtocol):
     def __init__(self, controller):
         super().__init__()
         self.controller = controller
+        self.receiver = controller
 
     def connection_made(self, transport):
         super().connection_made(transport)
@@ -66,16 +67,13 @@ class ServerProtocol(PLCProtocol):
         if exc:
             warn(repr(exc))
 
-    def on_message(self,obj):
-        debug("Received:", obj)
-        obj.server_action(self)
-
 class ClientProtocol(PLCProtocol):
     def __init__(self, user, pw, client):
         super().__init__()
         self.username = user
         self.pw = pw
         self.client = client
+        self.receiver = client
 
     def connection_made(self, transport):
         super().connection_made(transport)
@@ -84,7 +82,3 @@ class ClientProtocol(PLCProtocol):
 
     def connection_lost(self, exc):
         self.client.fatal("Lost Connection!")
-
-    def on_message(self,obj):
-        debug("Received:", obj)
-        obj.client_action(self)

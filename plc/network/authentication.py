@@ -16,7 +16,7 @@ def _get_users():
     else:
         users = []
     for i in range(len(users)):
-        users[i] = users[i].split(":")
+        users[i] = users[i].strip().split(":")
     return users
 
 def _write_users(users):

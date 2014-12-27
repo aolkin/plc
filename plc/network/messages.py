@@ -6,6 +6,7 @@ class Message:
         self.id = hash(self)
         self.__dict__.update(**kwargs)
         self._list = args
+        self._dict = kwargs
 
     def __getitem__(self, i):
         return self._list[i]
@@ -14,38 +15,30 @@ class Message:
         return len(self._list)
 
     def action(self, protocol):
-        debug("Message received.")
-
-    def server_action(self, protocol):
-        self.action(protocol)
-    
-    def client_action(self, protocol):
-        self.action(protocol)
+        action = self.__class__.__name__[:-7].lower()
+        getattr(protocol.receiver, action)(*self._list, **self._dict)
 
 class ResultMessage(Message):
     def action(self, protocol):
         debug("Result:", self._list)
-
-### Server messages
 
 class AuthMessage(Message):
     """Constructor arguments: username, hashed password"""
     def action(self, protocol):
         if protocol.user.login(self[0], self[1]):
             protocol.controller.register_client(protocol)
-            protocol.send_message(ResultMessage(True, "Authenticated successfully", self))
+            protocol.send_message(ResultMessage(
+                True, "Authenticated successfully", self))
         else:
-            protocol.send_message(ResultMessage(False, "Invalid username or password", self))
+            protocol.send_message(ResultMessage(
+                False, "Invalid username or password", self))
+            protocol.transport.close()
 
 class DimmerMessage(Message):
-    def server_action(self, protocol):
-        protocol.controller.do_update("dimmers", self[0])
-
-    def client_action(self, protocol):
-        protocol.client.pads.dimmers.set_dimmers(self[0], self[1] if len(self) > 1 else None)
+    pass
 
 class RequestMessage(Message):
-    def server_action(self, protocol):
+    def action(self, protocol):
         obj = getattr(protocol.controller, self[0]+"s")[self[1]]
         if self[0] == "group":
             protocol.send_message(GroupMessage(obj, action="update"))
@@ -56,33 +49,21 @@ class GroupMessage(Message):
     """Args: (action, group, [level])
 
     group should be the id of the group unless updating."""
-    def server_action(self, protocol):
-        if self[0] == "update":
-            group = protocol.controller.groups[self[1].id] = self[1]
-            group._groups = protocol.controller.groups
-        else:
-            group = protocol.controller.groups[self[1]]
-        if self[0] == "level" or (self[0] == "update" and len(self) > 2):
-            group.level = self[2]
-        protocol.controller.do_update("group", group)
-        for i in protocol.controller.clients:
-            i.send_message(self)
 
-    def client_action(self, protocol):
+    def action(self, protocol):
+        groups = protocol.receiver.get_list("groups")
         if self[0] == "update":
-            group = protocol.client.pads.list.groups[self[1].id] = self[1]
-            group._groups = protocol.client.pads.list.groups
+            group = groups[self[1].id] = self[1]
+            group._groups = groups
         else:
-            group = protocol.client.pads.list.groups[self[1]]
+            group = groups[self[1]]
         if self[0] == "level" or (self[0] == "update" and len(self) > 2):
             group.level = self[2]
-        protocol.client.pads.list.refresh("groups")
+        protocol.receiver.group(self[0], group)
 
 class CueMessage(GroupMessage):
-    def server_action(self, protocol):
-        super().server_action(protocol)
 
 class RegistryMessage(Message):
-    def client_action(self, protocol):
+    def action(self, protocol):
         setattr(protocol.client.pads.list, self[0], self[1])
         protocol.client.pads.list.refresh(self[0])

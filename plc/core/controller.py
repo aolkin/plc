@@ -6,10 +6,11 @@ from .data import *
 
 from ..network.protocols import ServerProtocol
 from ..network.messages import *
+from ..network.receiver import Receiver
 
 import asyncio, os
 
-class Controller:
+class Controller(Receiver):
     def __init__(self,settings=conf):
         self.settings = settings
         i = settings["universe"]
@@ -56,13 +57,21 @@ class Controller:
                 self.server.close()
                 self.loop.run_until_complete(self.server.wait_closed())
                 self.loop.close()
-    
-    def do_update(self, t, obj):
-        if t == "dimmers":
-            dimmers = obj
-        else:
-            dimmers = obj.get_dimmers()
+
+    def dimmer(self, dimmers, source=None):
         self.universe.set_dimmers(dimmers)
         for i in self.clients:
             i.send_message(DimmerMessage(dimmers))
         self.saver.save()
+
+    def do_update(self, obj):
+        self.dimmer(obj.get_dimmers())
+
+    def get_list(self, name):
+        return getattr(self, name)
+
+    def group(self, action, group):
+        self.do_update(group)
+        for i in self.clients:
+            i.send_message(GroupMessage(("update" if action == "level"
+                                         else action), group))

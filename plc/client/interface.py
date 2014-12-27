@@ -5,6 +5,8 @@ from ..core.logging import *
 from ..core.data import *
 from ..core.settings import conf
 
+from ..network.receiver import Receiver
+
 import time, sys, os
 
 MAX_ENTITIES = 999
@@ -22,12 +24,16 @@ class _ObjectDict(dict):
         self[k] = v
 
 class Pad:
-    def __init__(self, xfrac, yfrac, linefrac, colfrac):
+    def __init__(self, xfrac, yfrac, linefrac, colfrac, zindex=100):
         self.xfrac = xfrac
         self.yfrac = yfrac
         self.linefrac = linefrac
         self.colfrac = colfrac
+        self.z = zindex
         self.enabled = True
+
+    def __lt__(self, other):
+        return self.z < other.z
 
     def resize(self, w, h):
         self.x = int(self.xfrac * w)
@@ -50,12 +56,13 @@ class Pad:
                 self.post_update()
 
     def shift(self, *args):
-        return [i + (self.y if n % 2 == 0 else self.x) for n, i in enumerate(args)]
+        return [i + (self.y if n % 2 == 0 else self.x)
+                for n, i in enumerate(args)]
 
 class StatusPad(Pad):
     def __init__(self, screen):
         self.screen = screen
-        super().__init__(0, 0, 0.0625, 1)
+        super().__init__(0, 0, 0.0625, 1, 0)
         self.screen.loop.call_soon(self.timed_update)
 
     def post_resize(self, w, h):
@@ -68,7 +75,7 @@ class StatusPad(Pad):
 class DimmerPad(Pad):
     def __init__(self, scr, n):
         self.dimmers = [0 for i in range(n)]
-        super().__init__(0, 0.0625, 0.5, 1)
+        super().__init__(0, 0.0625, 0.5, 1, 10)
 
     def resize(self, w, h):
         super().resize(w // 4 * 4, h)
@@ -84,6 +91,7 @@ class DimmerPad(Pad):
                     self.pad.move(y, x)
 
     def set_dimmers(self, d, source=None):
+        log(d)
         attrs = 0
         if source == "input":
             attrs = A_DIM
@@ -117,6 +125,7 @@ class ListPad(BoxedPad):
     def post_resize(self, w, h):
         super().post_resize(w, h)
         self.grouppad = newpad(MAX_ENTITIES * 2, self.cols - 4)
+        self.cuepad = newpad(MAX_ENTITIES * 2, self.cols - 4)
         self.mode()
         if hasattr(self, "groups"):
             self.refresh(self.screen.mode+"s")
@@ -127,7 +136,8 @@ class ListPad(BoxedPad):
             self.addstr(0, int(self.cols / 2 - 3), "Groups", A_BOLD)
             self.addstr(1, 1, "  # Name" + " "*(self.cols - 13) + "@", A_REVERSE)
         elif self.screen.mode == "cue":
-            pass
+            self.addstr(0, int(self.cols / 2 - 3), " Cues ", A_BOLD)
+            self.addstr(1, 1, "  # Name" + " "*(self.cols - 13) + "@", A_REVERSE)
 
     def post_update(self):
         if not hasattr(self, "rows"):
@@ -153,7 +163,7 @@ class RunningPad(BoxedPad):
         self.screen = screen
         super().__init__(0, 0.6875, 0.3125, 0.5)
 
-class Screen:
+class Screen(Receiver):
     def __init__(self, loop):
         self.loop = loop
         self.pads = _ObjectDict()
@@ -168,9 +178,12 @@ class Screen:
         if c == ord("q"):
             self.loop.stop()
             return False
+        elif c == ord("m"):
+            self.mode = ("group" if self.mode == "cue" else "cue")
+            self.pads.list.mode()
         elif c == KEY_RESIZE:
             self.resize()
-        for i in self.pads.values():
+        for i in sorted(self.pads.values()):
             i.update()
         self.scr.refresh()
         self.loop.call_later(0.05, self.update)
@@ -190,6 +203,7 @@ class Screen:
     def create_pads(self):
         self.pads.status = StatusPad(self)
         self.pads.dimmers = DimmerPad(self, conf["dimmers"])
+        self.dimmer = self.pads.dimmers.set_dimmers
         self.pads.selected = SelectedPad(self)
         self.pads.running = RunningPad(self)
         self.pads.list = ListPad(self)
@@ -203,3 +217,9 @@ class Screen:
         self.resize()
         self.func()
         curs_set(self.original_cursor)
+
+    def get_list(self, name):
+        return getattr(self.pads.list, name)
+
+    def group(self, action, group):
+        self.pads.list.refresh("groups")
