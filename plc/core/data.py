@@ -90,6 +90,8 @@ class Group(DimmerGroup):
     def setzero(self, i):
         self.channels[i] = 0
 
+CUE_ATTRS = ("up", "down", "upwait", "downwait", "follow", "followtime")
+
 class Cue(DimmerGroup):
     def __init__(self, *args):
         super().__init__(*args)
@@ -103,6 +105,12 @@ class Cue(DimmerGroup):
 
     def __setitem__(self, i, val):
         self.meta[i] = val
+
+    def __getattr__(self, i):
+        if i in CUE_ATTRS:
+            return self[i]
+        else:
+            return object.__getattribute__(self, i)
 
     def persist_defaults(self):
         for i, val in conf["defaults"]["cue"].items():

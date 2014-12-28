@@ -48,7 +48,7 @@ class RequestMessage(Message):
 class GroupMessage(Message):
     """Args: (action, group, [level])
 
-    group should be the id of the group unless updating."""
+    'group' should be the id of the group unless updating."""
 
     def action(self, protocol):
         groups = protocol.receiver.get_list("groups")
@@ -62,6 +62,21 @@ class GroupMessage(Message):
         protocol.receiver.group(self[0], group)
 
 class CueMessage(GroupMessage):
+    """Args: (action, cue, [fader])
+
+    'group' should be the id of the group unless updating.
+    'fader' should be supplied to select the fader to run in when
+    sending a 'go' command."""
+
+    def action(self, protocol):
+        groups = protocol.receiver.get_list("cues")
+        if self[0] == "update":
+            group = groups[self[1].id] = self[1]
+            group._groups = groups
+        else:
+            group = groups[self[1]]
+        protocol.receiver.cue(self[0], group,
+                              self[2] if len(self) > 2 else None)
 
 class RegistryMessage(Message):
     def action(self, protocol):

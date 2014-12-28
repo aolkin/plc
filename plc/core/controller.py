@@ -61,11 +61,11 @@ class Controller(Receiver):
     def dimmer(self, dimmers, source=None):
         self.universe.set_dimmers(dimmers)
         for i in self.clients:
-            i.send_message(DimmerMessage(dimmers))
+            i.send_message(DimmerMessage(dimmers, source))
         self.saver.save()
 
     def do_update(self, obj):
-        self.dimmer(obj.get_dimmers())
+        self.dimmer(obj.get_dimmers(), obj.__class__.__name__)
 
     def get_list(self, name):
         return getattr(self, name)
@@ -75,3 +75,11 @@ class Controller(Receiver):
         for i in self.clients:
             i.send_message(GroupMessage(("update" if action == "level"
                                          else action), group))
+
+    def cue(self, action, cue, fader=None):
+        if action == "update":
+            for i in self.clients:
+                i.send_message(CueMessage(action, cue))
+        elif action == "go":
+            pass # Start fader thread
+        

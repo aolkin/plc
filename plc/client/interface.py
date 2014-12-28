@@ -1,4 +1,4 @@
-from curses import *
+import curses
 
 from ..core.errors import *
 from ..core.logging import *
@@ -10,6 +10,8 @@ from ..network.receiver import Receiver
 import time, sys, os
 
 MAX_ENTITIES = 999
+
+MAX_TIME = 9999
 
 DIMMER_MAX = 255
 
@@ -40,7 +42,7 @@ class Pad:
         self.y = int(self.yfrac * h)
         self.rows = int(self.linefrac * h)
         self.cols = int(self.colfrac * w)
-        self.pad = newpad(self.rows, self.cols)
+        self.pad = curses.newpad(self.rows, self.cols)
         if hasattr(self, "post_resize"):
             self.post_resize(w, h)
 
@@ -66,11 +68,12 @@ class StatusPad(Pad):
         self.screen.loop.call_soon(self.timed_update)
 
     def post_resize(self, w, h):
-        self.pad.addstr(0, 0, " Python Lighting Controls ", A_REVERSE)
+        self.pad.addstr(0, 0, " Python Lighting Controls ", curses.A_REVERSE)
 
     def timed_update(self):
         self.screen.loop.call_later(1, self.timed_update)
-        self.pad.addstr(0, self.cols-10, time.strftime(" %I:%M %p "), A_REVERSE) # width: 10
+        self.pad.addstr(0, self.cols-10, time.strftime(" %I:%M %p "),
+                        curses.A_REVERSE) # width: 10
 
 class DimmerPad(Pad):
     def __init__(self, scr, n):
@@ -94,7 +97,7 @@ class DimmerPad(Pad):
         log(d)
         attrs = 0
         if source == "input":
-            attrs = A_DIM
+            attrs = curses.A_DIM
         for i, j in d.items():
             try:
                 self.dimmers[i] = j
@@ -124,8 +127,8 @@ class ListPad(BoxedPad):
 
     def post_resize(self, w, h):
         super().post_resize(w, h)
-        self.grouppad = newpad(MAX_ENTITIES * 2, self.cols - 4)
-        self.cuepad = newpad(MAX_ENTITIES * 2, self.cols - 4)
+        self.grouppad = curses.newpad(MAX_ENTITIES * 2, self.cols - 4)
+        self.cuepad = curses.newpad(MAX_ENTITIES * 2, self.cols - 4)
         self.mode()
         if hasattr(self, "groups"):
             self.refresh(self.screen.mode+"s")
@@ -133,11 +136,14 @@ class ListPad(BoxedPad):
     def mode(self):
         self.currentrow = 0
         if self.screen.mode == "group":
-            self.addstr(0, int(self.cols / 2 - 3), "Groups", A_BOLD)
-            self.addstr(1, 1, "  # Name" + " "*(self.cols - 13) + "@", A_REVERSE)
+            self.addstr(0, int(self.cols / 2 - 3), "Groups", curses.A_BOLD)
+            self.addstr(1, 1, "  # Name" + " "*(self.cols - 13) + "@",
+                        curses.A_REVERSE)
         elif self.screen.mode == "cue":
-            self.addstr(0, int(self.cols / 2 - 3), " Cues ", A_BOLD)
-            self.addstr(1, 1, "  # Name" + " "*(self.cols - 13) + "@", A_REVERSE)
+            self.addstr(0, int(self.cols / 2 - 3), " Cues ", curses.A_BOLD)
+            self.addstr(1, 1, "  # Name" + " "*(self.cols - 43) +
+                        "Up Down UWait DWait Follow:Time",
+                        curses.A_REVERSE)
 
     def post_update(self):
         if not hasattr(self, "rows"):
@@ -152,6 +158,15 @@ class ListPad(BoxedPad):
                 row = "{:>3} {}{{}}{:>3}\n".format(i, getattr(j, "name", ""),
                                                    percent(j.level))
                 self.grouppad.addstr(row.format( " " * (self.cols - len(row) - 1) ))
+        elif t == "cues":
+            self.cuepad.clear()
+            for i, j in sorted(self.cues.items()):
+                row = ("{:>3} {}{{}}{:>4} {:>4}  {:>4}  {:>4}    {:>3} " +
+                       "{:>4}\n").format(i, getattr(j, "name", ""), j.up,
+                                         j.down, j.upwait, j.downwait,
+                                         j.follow if j.follow else "",
+                                         j.followtime if j.followtime else "")
+                self.cuepad.addstr(row.format( " " * (self.cols - len(row) - 1) ))
 
 class SelectedPad(BoxedPad):
     def __init__(self, screen):
@@ -181,7 +196,7 @@ class Screen(Receiver):
         elif c == ord("m"):
             self.mode = ("group" if self.mode == "cue" else "cue")
             self.pads.list.mode()
-        elif c == KEY_RESIZE:
+        elif c == curses.KEY_RESIZE:
             self.resize()
         for i in sorted(self.pads.values()):
             i.update()
@@ -198,7 +213,7 @@ class Screen(Receiver):
     def wrapper(self, func, protocol):
         self.func = func
         self.protocol = protocol
-        wrapper(self.wrapped)
+        curses.wrapper(self.wrapped)
 
     def create_pads(self):
         self.pads.status = StatusPad(self)
@@ -211,15 +226,18 @@ class Screen(Receiver):
     def wrapped(self, stdscr):
         self.scr = stdscr
         self.scr.nodelay(True)
-        self.original_cursor = curs_set(0)
+        self.original_cursor = curses.curs_set(0)
 
         self.create_pads()
         self.resize()
         self.func()
-        curs_set(self.original_cursor)
+        curses.curs_set(self.original_cursor)
 
     def get_list(self, name):
         return getattr(self.pads.list, name)
 
     def group(self, action, group):
         self.pads.list.refresh("groups")
+
+    def cue(self, action, group):
+        self.pads.list.refresh("cues")

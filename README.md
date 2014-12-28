@@ -19,3 +19,14 @@ Curses Client Keybindings
 
 q - quit
 m - switch list
+
+
+Cue Attributes
+---------------------------------
+
+- up
+- down
+- upwait
+- downwait
+- follow
+- followtime
