@@ -7,6 +7,8 @@ from ..core.settings import conf
 
 from ..network.receiver import Receiver
 
+from .colors import init_colors, get_color
+
 import time, sys, os
 
 MAX_ENTITIES = 999
@@ -61,6 +63,9 @@ class Pad:
         return [i + (self.y if n % 2 == 0 else self.x)
                 for n, i in enumerate(args)]
 
+    def handle_mouse(self, e):
+        log(self.__class__, e)
+
 class StatusPad(Pad):
     def __init__(self, screen):
         self.screen = screen
@@ -94,10 +99,11 @@ class DimmerPad(Pad):
                     self.pad.move(y, x)
 
     def set_dimmers(self, d, source=None):
-        log(d)
         attrs = 0
         if source == "input":
             attrs = curses.A_DIM
+        if source == "Cue":
+            attrs = get_color("GREEN")
         for i, j in d.items():
             try:
                 self.dimmers[i] = j
@@ -189,6 +195,7 @@ class Screen(Receiver):
         self.loop.stop()
 
     def update(self):
+        self.loop.call_later(0.05, self.update)
         c = self.scr.getch()
         if c == ord("q"):
             self.loop.stop()
@@ -196,12 +203,19 @@ class Screen(Receiver):
         elif c == ord("m"):
             self.mode = ("group" if self.mode == "cue" else "cue")
             self.pads.list.mode()
+        elif c == curses.KEY_MOUSE:
+            self.handle_mouse()
         elif c == curses.KEY_RESIZE:
             self.resize()
         for i in sorted(self.pads.values()):
             i.update()
         self.scr.refresh()
-        self.loop.call_later(0.05, self.update)
+
+    def handle_mouse(self):
+        e = curses.getmouse()
+        for i in self.pads.values():
+            if i.pad.enclose(e[2], e[1]):
+                i.handle_mouse(e)
 
     def resize(self):
         self.height, self.width = self.scr.getmaxyx()
@@ -227,6 +241,10 @@ class Screen(Receiver):
         self.scr = stdscr
         self.scr.nodelay(True)
         self.original_cursor = curses.curs_set(0)
+
+        curses.mousemask(curses.BUTTON1_CLICKED |
+                         curses.BUTTON1_DOUBLE_CLICKED)
+        init_colors()
 
         self.create_pads()
         self.resize()

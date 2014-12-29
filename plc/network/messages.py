@@ -62,7 +62,7 @@ class GroupMessage(Message):
         protocol.receiver.group(self[0], group)
 
 class CueMessage(GroupMessage):
-    """Args: (action, cue, [fader])
+    """Args: (action, cue)
 
     'group' should be the id of the group unless updating.
     'fader' should be supplied to select the fader to run in when
@@ -72,11 +72,10 @@ class CueMessage(GroupMessage):
         groups = protocol.receiver.get_list("cues")
         if self[0] == "update":
             group = groups[self[1].id] = self[1]
-            group._groups = groups
+            group._groups = protocol.receiver.get_list("groups")
         else:
             group = groups[self[1]]
-        protocol.receiver.cue(self[0], group,
-                              self[2] if len(self) > 2 else None)
+        protocol.receiver.cue(self[0], group)
 
 class RegistryMessage(Message):
     def action(self, protocol):

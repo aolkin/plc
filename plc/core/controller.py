@@ -3,6 +3,7 @@ from .settings import conf
 from .integration import *
 from .persistence import *
 from .data import *
+from .fader import Fader
 
 from ..network.protocols import ServerProtocol
 from ..network.messages import *
@@ -25,6 +26,7 @@ class Controller(Receiver):
             self.saver.cues = Registry(Cue)
         self.groups = self.saver.groups
         self.cues = self.saver.cues
+        self.faders = {}
 
         self.loop = asyncio.get_event_loop()
         self.coroutine = self.loop.create_server(lambda: ServerProtocol(self),
@@ -76,10 +78,12 @@ class Controller(Receiver):
             i.send_message(GroupMessage(("update" if action == "level"
                                          else action), group))
 
-    def cue(self, action, cue, fader=None):
+    def cue(self, action, cue):
         if action == "update":
+            self.saver.save()
             for i in self.clients:
                 i.send_message(CueMessage(action, cue))
         elif action == "go":
-            pass # Start fader thread
-        
+            if self.faders.get(cue.id, None) and not self.faders[cue.id].done:
+                self.faders[cue.id].stop()
+            self.faders[cue.id] = Fader(self, cue)

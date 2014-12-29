@@ -5,6 +5,7 @@ from ola.DMXConstants import *
 
 from .settings import conf
 from .errors import *
+from .logging import *
 
 def _verify_level(i):
     if i < 0 or i > 1:
@@ -52,9 +53,9 @@ class DimmerGroup:
         self.level = round(level * DMX_MAX_SLOT_VALUE)
         dimmers = {}
         for obj, intensity in self.nested.items():
-            for d, i in self._groups[obj].get_dimmers_at(intensity):
+            for d, i in self._groups[obj].get_dimmers_at(intensity).items():
                 if i > dimmers.get(d,0):
-                    dimmers[d] = i
+                    dimmers[d] = i / DMX_MAX_SLOT_VALUE
         dimmers.update(self.channels)
         for d, i in dimmers.items():
             dimmers[d] = round(dimmers[d] * level * DMX_MAX_SLOT_VALUE)
@@ -117,7 +118,9 @@ class Cue(DimmerGroup):
             self.meta.setdefault(i, val)
 
     def add_group(self, g, i):
-        """Also use this to change group intensities."""
+        """Also use this to change group intensities.
+
+        'g' should be the group id, not object."""
         _verify_level(i)
         self.nested[g] = i
 

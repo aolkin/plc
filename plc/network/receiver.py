@@ -17,7 +17,7 @@ class Receiver:
         have been processed. 'group' will always be the group object."""
         raise ActionNotImplemented("group")
 
-    def cue(self, action, cue, fader=None):
+    def cue(self, action, cue):
         """Called to perform various actions on cues.
         
         Any updates to the group will already have been processed.

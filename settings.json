@@ -25,7 +25,12 @@
     },
     "defaults": {
 	"cue": {
-	    
+	    "up": 2,
+	    "down": 2,
+	    "upwait": 0,
+	    "downwait": 0,
+	    "follow": null,
+	    "followtime": null	    
 	}
     },
     "server": {
