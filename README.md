@@ -1,7 +1,10 @@
 PLC - Python Lighting Controls
 =================================
 
-A Python lighting controller, with a curses-based frontend and using OLA for the backend.
+A Python lighting board framework, using the Open Lighting Architecture
+for USB-DMX interfacing. This repository contains the core server that
+handles DMX output via OLA and cue playback, and can receive commands or
+send status to several clients simultaneously.
 
 Requirements
 ---------------------------------
@@ -12,13 +15,6 @@ Requirements
 
 ##### Python Packages
   - passlib
-
-
-Curses Client Keybindings
----------------------------------
-
-q - quit
-m - switch list
 
 
 Cue Attributes

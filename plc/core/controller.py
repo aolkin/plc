@@ -3,7 +3,7 @@ from .settings import conf
 from .integration import *
 from .persistence import *
 from .data import *
-from .fader import Fader
+from .fader import *
 
 from ..network.protocols import ServerProtocol
 from ..network.messages import *
@@ -87,3 +87,7 @@ class Controller(Receiver):
             if self.faders.get(cue.id, None) and not self.faders[cue.id].done:
                 self.faders[cue.id].stop()
             self.faders[cue.id] = Fader(self, cue)
+        elif action == "down":
+            if self.faders.get(cue.id, None) and not self.faders[cue.id].done:
+                self.faders[cue.id].stop()
+            self.faders[cue.id] = Fader(self, cue, direction=DOWN)
