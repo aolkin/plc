@@ -1,7 +1,7 @@
 
 import pickle
 
-from ola.DMXConstants import *
+DMX_MAX_SLOT_VALUE = 255
 
 from .settings import conf
 from .errors import *
