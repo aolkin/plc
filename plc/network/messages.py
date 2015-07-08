@@ -39,7 +39,7 @@ class DimmerMessage(Message):
 
 class RequestMessage(Message):
     def action(self, protocol):
-        obj = getattr(protocol.controller, self[0]+"s")[self[1]]
+        obj = protocol.controller.get_list(self[0]+"s")[self[1]]
         if self[0] == "group":
             protocol.send_message(GroupMessage(obj, action="update"))
         elif self[0] == "cue":
@@ -78,6 +78,4 @@ class CueMessage(GroupMessage):
         protocol.receiver.cue(self[0], group)
 
 class RegistryMessage(Message):
-    def action(self, protocol):
-        setattr(protocol.client.pads.list, self[0], self[1])
-        protocol.client.pads.list.refresh(self[0])
+    pass

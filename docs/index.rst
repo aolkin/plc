@@ -38,7 +38,7 @@ Documentation
    core/advanced
    core/helpers
    
-   network/index
+   network
 
 
 * :ref:`genindex`

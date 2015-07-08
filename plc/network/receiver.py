@@ -9,6 +9,7 @@ class Receiver:
 
     def get_list(self, name):
         """Should return the requested list."""
+        raise ActionNotImplemented("get_list")
 
     def group(self, action, group):
         """Called to perform various actions on groups.
@@ -27,3 +28,7 @@ class Receiver:
     def result(self, of, *args, **kwargs):
         """Called with the result of an action."""
         raise ActionNotImplemented("result")
+
+    def registry(self, type_, reg):
+        """Basically set_list"""
+        raise ActionNotImplemented("registry")
