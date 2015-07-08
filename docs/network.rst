@@ -5,7 +5,7 @@ Protocol
 =========================
 
 .. module:: plc.network.protocols
-   :synopsis: The asyncio-compatible "Protocol" classes
+   :synopsis: The asyncio-compatible Protocol classes
 
 The PLC network protocol works by sending pickled :class:`.Message` objects,
 whose :meth:`~.Message.action` methods are called by the receiving code. In
