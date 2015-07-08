@@ -29,9 +29,9 @@ class _OlaThread(Thread):
         self.client = self.wrapper.Client()
         for i in self.universes:
             i.register(self)
-            log("Starting OLA Wrapper...")
-            self.wrapper.Run()
-            log("OLA Wrapper stopped...")
+        log("Starting OLA Wrapper...")
+        self.wrapper.Run()
+        log("OLA Wrapper stopped...")
 
 ola_lock = Lock()
 ola_thread = _OlaThread()

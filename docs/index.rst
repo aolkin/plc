@@ -8,9 +8,8 @@ PLC - Python Lighting Controls
 
 Python Lighting Controls provides a server and various clients for
 controlling lights over DMX with USB-DMX devices and the
-`Open Lighting Architecture <https://www.openlighting.org/ola/>`_.
-The server currently understands groups and cues, and will eventually
-support playback of those cues.
+:term:`Open Lighting Architecture`. The server currently understands groups
+and cues, and will eventually support playback of those cues.
 
 Get the Code
 ====================================
