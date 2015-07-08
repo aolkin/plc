@@ -16,7 +16,7 @@ Central Controller
    :class:`.PersistentData` and automatically saves the cues and groups of
    the show every time they are modified.
 
-   The Controller is a :ref:`Receiver` and implement all of the necessary
+   The Controller is a :class:`.Receiver` and implement all of the necessary
    methods to be such.
 
 DMX Hardware Integration
