@@ -6,3 +6,5 @@ passwd
 
 *.dat
 *.log
+
+docs/_build/

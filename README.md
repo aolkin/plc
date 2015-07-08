@@ -15,14 +15,3 @@ Requirements
 
 ##### Python Packages
   - passlib
-
-
-Cue Attributes
----------------------------------
-
-- up
-- down
-- upwait
-- downwait
-- follow
-- followtime

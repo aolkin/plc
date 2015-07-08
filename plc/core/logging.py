@@ -2,7 +2,15 @@ from .settings import conf
 import sys, time, os
 import traceback as tb
 
-settings = conf["logging"]
+DEFAULT_CONFIG = {
+    "errors": 2,
+    "warnings": 2,
+    "debug": 2,
+    "logging": 1,
+    "folder": "."
+}
+
+settings = conf.get("logging",DEFAULT_CONFIG)
 
 if conf.get("daemon") or settings.get("client"):
     DESCRIPTORS = [open(os.devnull, "w"),
