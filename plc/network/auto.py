@@ -37,15 +37,14 @@ class AutoClient:
         self.servers = {}
         self._data = defaultdict(bytes)
         self._loop = asyncio.get_event_loop()
-        self._loop.call_soon(self.receive)
         self._cb = cb
         self.reset()
 
     def reset(self):
+        self._loop.call_soon(self.receive)
         self.get_server = asyncio.Future()
         
     def receive(self):
-        self._loop.call_later(0.01, self.receive)
         data, addr = self._bcast_socket.recvfrom(1024)
         if data:
             self._data[addr] += data
@@ -61,6 +60,8 @@ class AutoClient:
                     self.get_server.set_result(obj)
                     if self._cb:
                         self._cb(obj)
+        if not self.get_server.done():
+            self._loop.call_soon(self.receive)
 
     def get_port(self, addr):
         return self.servers[addr]["port"]

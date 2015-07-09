@@ -6,7 +6,7 @@ default_fn = sys.argv[1] if len(sys.argv) > 1 else "settings.json"
 class Configuration(dict):
     def save(self, fn=default_fn):
         fd = open(fn,"w")
-        json.dump(self,fd)
+        json.dump(self,fd, indent=4, sort_keys=True)
         fd.close()
 
     def load(self, fn=default_fn):
