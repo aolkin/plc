@@ -81,7 +81,10 @@ class Group(DimmerGroup):
 
     def __setitem__(self, i, val):
         if self.__discard_zero and val == 0:
-            del self.channels[i]
+            try:
+                del self.channels[i]
+            except KeyError:
+                pass
         else:
             _verify_level(val)
             self.channels[i] = val
