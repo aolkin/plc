@@ -1,7 +1,7 @@
 
 import sys, json, os
 
-default_fn = sys.argv[1] if len(sys.argv) > 1 else "settings.json"
+default_fn = "settings.json"
 
 class Configuration(dict):
     def save(self, fn=default_fn):
