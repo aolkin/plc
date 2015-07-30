@@ -3,7 +3,6 @@ from asyncio import Protocol
 import pickle
 
 from struct import Struct
-from traceback import format_exc
 
 from .messages import *
 from .authentication import *
@@ -39,7 +38,7 @@ class PLCProtocol(Protocol):
                 try:
                     self.on_message(pickle.loads(self.data))
                 except Exception as err:
-                    error(format_exc())
+                    last_exception()
                 finally:
                     self.data = b''
                     self.header = b''
