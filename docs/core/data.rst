@@ -22,7 +22,7 @@ be fractions of 1.
 
 .. autoclass:: DimmerGroup
 
-   .. method:: get_dimmers_at(level)
+   .. method:: get_dimmers(level=None)
       
       This method will return a dictionary of dimmers that should be
       affected by this :class:`DimmerGroup`, with any channels set in the
@@ -30,17 +30,12 @@ be fractions of 1.
       groups, which will also have their levels updated.
 
       ``level`` should be a fraction of 1, and will be set as the current
-      level for the group.
+      level for the group. If it is omitted, the last set level will be used.
 
-   .. method:: get_dimmers_at_level(level)
+   .. method:: get_dimmers_at(level)
 
       This method is identical to the previous one, except that the ``level``
       argument to this method should be a raw DMX value (0-255).
-
-   .. method:: get_dimmers
-
-      This method simply returns the dimmer dictionary at the level
-      currently set for the group.
 
 .. class:: Group
 

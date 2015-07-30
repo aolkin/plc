@@ -43,14 +43,12 @@ class DimmerGroup:
         self.name = ""
         self._groups = group_registry
 
-    def get_dimmers(self):
-        return self.get_dimmers_at(self.level)
-
-    def get_dimmers_at_level(self, level):
+    def get_dimmers_at(self, level):
         return self.get_dimmers_at(level / DMX_MAX_SLOT_VALUE)
 
-    def get_dimmers_at(self, level):
-        self.level = round(level * DMX_MAX_SLOT_VALUE)
+    def get_dimmers(self, level=None):
+        if not (level is None):
+            self.level = level
         dimmers = {}
         for obj, intensity in self.nested.items():
             for d, i in self._groups[obj].get_dimmers_at(intensity).items():
@@ -58,7 +56,7 @@ class DimmerGroup:
                     dimmers[d] = i / DMX_MAX_SLOT_VALUE
         dimmers.update(self.channels)
         for d, i in dimmers.items():
-            dimmers[d] = round(dimmers[d] * level * DMX_MAX_SLOT_VALUE)
+            dimmers[d] = round(dimmers[d] * self.level * DMX_MAX_SLOT_VALUE)
         return dimmers
 
     def get_binary(self):

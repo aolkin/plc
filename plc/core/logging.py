@@ -14,14 +14,19 @@ settings = conf.get("logging",DEFAULT_CONFIG)
 
 if conf.get("daemon") or settings.get("client"):
     DESCRIPTORS = [open(os.devnull, "w"),
-                   open(os.path.join(settings.get("folder", "."), "output.log"), "a"),
-                   open(os.path.join(settings.get("folder", "."), "errors.log"), "a")]
+                   open(os.path.join(settings.get("folder", "."),
+                                     "output.log"), "a"),
+                   open(os.path.join(settings.get("folder", "."),
+                                     "errors.log"), "a")]
 else:
     DESCRIPTORS = [open(os.devnull, "w"), sys.stdout, sys.stderr]
 
 def _log(level, *args):
     fd = DESCRIPTORS[settings[level]]
-    print(time.strftime("[%m/%d/%y %H:%M:%S]"), *args, file=fd)
+    ts = time.strftime("[%m/%d/%y %H:%M:%S]")
+    out = " ".join([ts] + [str(i) for i in args])
+    out = out.replace("\n","\n" + ts + " ")
+    fd.write(out + "\n")
     fd.flush()
 
 def log(*args):
