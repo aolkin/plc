@@ -8,6 +8,7 @@ from .messages import *
 from .authentication import *
 from plc.core.errors import *
 from plc.core.logging import *
+from .auto import BroadcastServer
 
 HEADER_STRUCT = Struct("!BH")
 
@@ -52,11 +53,13 @@ class PLCProtocol(Protocol):
         debug("Received:", obj)
         obj.action(self)
 
-class ServerProtocol(PLCProtocol):
+class ServerProtocol(PLCProtocol, BroadcastServer):
     def __init__(self, controller):
         super().__init__()
         self.controller = controller
         self.receiver = controller
+
+        self.init_broadcast()
 
     def connection_made(self, transport):
         super().connection_made(transport)

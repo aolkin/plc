@@ -36,6 +36,8 @@
     "server": {
 	"address": "",
 	"port": 7832,
+	"bcast_port": 7834,
+	"friendly_name": "Dummy Demo",
 	"users": "passwd",
 	"pickle_version": 4
     }
